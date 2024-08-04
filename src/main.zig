@@ -25,11 +25,6 @@ pub fn main() !void {
 
     const allocator = arena.allocator();
 
-    // const root = try tree.ZitObject.init(&allocator, tree.ZitObject.Type.tree, "root", [_]u8{0} ** 40);
-    // defer root.deinit(&allocator);
-    // const zt = try tree.ZiTree.init(&allocator, root);
-    // defer zt.deinit();
-
     var arg_iterator = try std.process.argsWithAllocator(allocator);
     defer arg_iterator.deinit();
 
