@@ -1,6 +1,7 @@
 const std = @import("std");
 const sha1 = @import("std").crypto.hash.Sha1;
 const zlib = @import("std").compress.zlib;
+const testing = std.testing;
 
 const zit_dir: []const u8 = ".zit";
 const object_dir: []const u8 = zit_dir ++ "/objects";
@@ -76,6 +77,7 @@ fn create_object_path(allocator: std.mem.Allocator, hash_hex: [40]u8) ![]u8 {
     return try std.fs.path.join(allocator, &[_][]const u8{ object_dir, &path });
 }
 
+// Compress and write file to blob object storage.
 fn write_compressed_blob(file: std.fs.File, full_path: []const u8) !void {
     const dirname = std.fs.path.dirname(full_path) orelse return error.IoError;
     try std.fs.cwd().makePath(dirname);
@@ -89,4 +91,21 @@ fn write_compressed_blob(file: std.fs.File, full_path: []const u8) !void {
     var buffered_writer = std.io.bufferedWriter(out_file.writer());
     try zlib.compress(file.reader(), buffered_writer.writer(), .{});
     try buffered_writer.flush();
+}
+
+test create_object_subdir {
+    const hash = "d670460b4b4aece5915caf5c68d12f560a9fe3e4";
+    const expected = "d6/70460b4b4aece5915caf5c68d12f560a9fe3e4";
+    const actual = create_object_subdir(hash.*);
+
+    try testing.expectEqualStrings(expected, &actual);
+}
+
+test create_object_path {
+    const hash = "d670460b4b4aece5915caf5c68d12f560a9fe3e4";
+    const expected = object_dir ++ "/d6/70460b4b4aece5915caf5c68d12f560a9fe3e4";
+    const actual = try create_object_path(testing.allocator, hash.*);
+    defer testing.allocator.free(actual);
+
+    try testing.expectEqualStrings(expected, actual);
 }
