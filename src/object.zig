@@ -18,7 +18,7 @@ const ObjectType = enum {
     }
 };
 
-pub fn store_blob(path: []const u8) !void {
+pub fn store_blob(path: []const u8) ![40]u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -36,8 +36,7 @@ pub fn store_blob(path: []const u8) !void {
     defer allocator.free(object_path);
 
     try write_compressed_blob(file, object_path);
-
-    std.debug.print("Blob stored at: {s}\n", .{object_path});
+    return hash;
 }
 
 fn get_file_size(file: std.fs.File) !u64 {
@@ -94,11 +93,19 @@ fn write_compressed_blob(file: std.fs.File, full_path: []const u8) !void {
 }
 
 // Write the decompressed zit object blob to the supplied writer.
-fn read_compressed_blob(full_path: []const u8, writer: anytype) !void {
-    const in_file = try std.fs.cwd().openFile(full_path, .{});
+pub fn read_compressed_blob(allocator: std.mem.Allocator, hash: []const u8, writer: anytype) !void {
+    if (hash.len != 40) {
+        return ZitError.ObjectNotFound;
+    }
+
+    var hashArray: [40]u8 = undefined;
+    @memcpy(&hashArray, hash);
+    const path = try create_object_path(allocator, hashArray);
+
+    const in_file = try std.fs.cwd().openFile(path, .{});
     defer in_file.close();
 
-    const buffered_writer = std.io.bufferedWriter(writer);
+    var buffered_writer = std.io.bufferedWriter(writer);
     try zlib.decompress(in_file.reader(), buffered_writer.writer());
     try buffered_writer.flush();
 }

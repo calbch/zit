@@ -8,5 +8,6 @@ A toy implementation of [Git Objects](https://git-scm.com/book/en/v2/Git-Interna
 zit <command>
 ```
 
-- `init`: initializes the object store at `./zit/objects` 
-- `hash-object <file-path>`: writes compress blob of file at `<file-path>` to object storage
+- `init`: Initialize the object store at `./zit/objects`.
+- `hash-object <file-path>`: Write compressed blob of file at `<file-path>` to object storage.
+- `cat-file <object-hash>`: Cat the content of the compressed blob with hash `<object-hash>` to stdout.

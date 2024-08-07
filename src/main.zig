@@ -28,10 +28,16 @@ pub fn main() !void {
     var arg_iterator = try std.process.argsWithAllocator(allocator);
     defer arg_iterator.deinit();
 
+    const stdout = std.io.getStdOut().writer();
+
     const command = cli.parse(&arg_iterator);
 
     switch (command) {
         .init => try init(),
-        .hash => |hash| try object.store_blob(hash.path),
+        .hash => |hash| {
+            const object_hash = try object.store_blob(hash.path);
+            stdout.print("{s}", .{object_hash}) catch {};
+        },
+        .cat => |cat| try object.read_compressed_blob(allocator, cat.hash, stdout),
     }
 }

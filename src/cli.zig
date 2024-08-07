@@ -5,18 +5,19 @@ const assert = std.debug.assert;
 const CliArgs = union(enum) {
     init: struct {},
     hash: struct { path: []const u8 },
-    // cat: struct { hash: []const u8 },
+    cat: struct { hash: []const u8 },
 };
 
 // Store validated and desugared command.
 pub const Command = union(enum) {
     pub const Init = struct {};
+    // TODO: Find better naming for 'hash'/'cat'. This is incredibly confusing.
     pub const Hash = struct { path: []const u8 };
-    // pub const Cat = struct { hash: []const u8 };
+    pub const Cat = struct { hash: []const u8 };
 
     init: Init,
     hash: Hash,
-    // cat: Cat,
+    cat: Cat,
 };
 
 pub fn fatal(comptime fmt_string: []const u8, args: anytype) noreturn {
@@ -40,15 +41,16 @@ fn parse_args(args_iterator: *std.process.ArgIterator) CliArgs {
         return @unionInit(CliArgs, "init", .{});
     } else if (std.mem.eql(u8, command, "hash-object")) {
         const path = args_iterator.next() orelse fatal("file path required", .{});
+        // TODO: Validate if cli arg is valid file path inside of the repository.
 
         // Should I check here if the specified path is valid?
-
         return @unionInit(CliArgs, "hash", .{ .path = path });
+    } else if (std.mem.eql(u8, command, "cat-file")) {
+        const hash = args_iterator.next() orelse fatal("object hash required", .{});
+        // TODO: Validate if cli arg is a valid object storage hash.
+
+        return @unionInit(CliArgs, "cat", .{ .hash = hash });
     }
-    // else if (std.mem.eql(u8, command, "cat-file")) {
-    //     // TODO: Parse hash and add during union init.
-    //     return @unionInit(CliArgs, "cat", .{});
-    // }
 
     fatal("unknown command: {s}", .{command});
 }
@@ -59,5 +61,6 @@ pub fn parse(args_iterator: *std.process.ArgIterator) Command {
     return switch (cli_args) {
         .init => .{ .init = Command.Init{} },
         .hash => .{ .hash = Command.Hash{ .path = cli_args.hash.path } },
+        .cat => .{ .cat = Command.Cat{ .hash = cli_args.cat.hash } },
     };
 }
