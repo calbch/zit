@@ -9,3 +9,4 @@ zit <command>
 ```
 
 - `init`: initializes the object store at `./zit/objects` 
+- `hash-object <file-path>`: writes compress blob of file at `<file-path>` to object storage

@@ -93,6 +93,16 @@ fn write_compressed_blob(file: std.fs.File, full_path: []const u8) !void {
     try buffered_writer.flush();
 }
 
+// Write the decompressed zit object blob to the supplied writer.
+fn read_compressed_blob(full_path: []const u8, writer: anytype) !void {
+    const in_file = try std.fs.cwd().openFile(full_path, .{});
+    defer in_file.close();
+
+    const buffered_writer = std.io.bufferedWriter(writer);
+    try zlib.decompress(in_file.reader(), buffered_writer.writer());
+    try buffered_writer.flush();
+}
+
 test create_object_subdir {
     const hash = "d670460b4b4aece5915caf5c68d12f560a9fe3e4";
     const expected = "d6/70460b4b4aece5915caf5c68d12f560a9fe3e4";

@@ -1,4 +1,4 @@
-const objects = @import("objects.zig");
+const object = @import("object.zig");
 const tree = @import("tree.zig");
 const cli = @import("cli.zig");
 const std = @import("std");
@@ -32,5 +32,6 @@ pub fn main() !void {
 
     switch (command) {
         .init => try init(),
+        .hash => |hash| try object.store_blob(hash.path),
     }
 }
